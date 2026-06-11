@@ -4,10 +4,10 @@
 ### 👥 Team Members
 - Sandesh H P
 - Mannala Manogna
-Rohan Raj Pampari
-Advaith Katkojwala
-Mridul Rajan
-Tarun Mikkilineni
+- Rohan Raj Pampari
+- Advaith Katkojwala
+- Mridul Rajan
+- Tarun Mikkilineni
 
 ### 🎯 Project Overview
 This project is submitted as part of the **Data Science for Business (DSB)** module at the **University of Europe for Applied Sciences (UE), Potsdam**. The project investigates the historical behavior of three major global commodities — **Brent Crude Oil**, **Gold**, and **Silver** — alongside international currency payment trends tracked via the **SWIFT Currency Tracker**.
