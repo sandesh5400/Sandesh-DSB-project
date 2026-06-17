@@ -1,0 +1,136 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.wrap { padding: 1.5rem 0; font-family: var(--font-sans); }
+.hdr { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem; }
+.hdr-text h2 { font-size: 16px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 3px; }
+.hdr-text p { font-size: 12px; color: var(--color-text-secondary); }
+.dl-btn { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; padding: 7px 14px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: var(--color-background-primary); color: var(--color-text-primary); cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+.dl-btn:hover { background: var(--color-background-secondary); }
+.dl-btn i { font-size: 15px; }
+.week-header { display: flex; margin-bottom: 4px; margin-left: 155px; }
+.week-label { flex: 1; font-size: 10px; color: var(--color-text-secondary); text-align: center; }
+.gantt-table { width: 100%; border-collapse: collapse; }
+.gantt-table tr { border-bottom: 0.5px solid var(--color-border-tertiary); }
+.gantt-table tr:last-child { border-bottom: none; }
+.member-col { width: 155px; padding: 10px 12px 10px 0; vertical-align: middle; }
+.member-name { font-size: 12px; font-weight: 500; color: var(--color-text-primary); line-height: 1.3; }
+.member-role { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; line-height: 1.3; }
+.timeline-col { padding: 10px 0; vertical-align: middle; }
+.timeline-inner { position: relative; height: 48px; }
+.week-grid { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; pointer-events: none; }
+.week-grid-line { flex: 1; border-right: 0.5px solid var(--color-border-tertiary); }
+.week-grid-line:last-child { border-right: none; }
+.bar { position: absolute; top: 6px; height: 36px; border-radius: 5px; display: flex; align-items: center; padding: 0 10px; overflow: hidden; }
+.bar-label { font-size: 11px; font-weight: 500; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; }
+.bar-qs { font-size: 10px; color: rgba(255,255,255,0.85); display: block; margin-top: 1px; }
+.section-pills { margin-top: 1.25rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.pill { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 10px 12px; border-left: 3px solid; }
+.pill-section { font-size: 10px; color: var(--color-text-secondary); margin-bottom: 3px; }
+.pill-member { font-size: 12px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 2px; }
+.pill-qs { font-size: 11px; color: var(--color-text-secondary); }
+</style>
+
+<div class="wrap">
+  <h2 class="sr-only">DSB Part I Gantt Chart with download option</h2>
+  <div class="hdr">
+    <div class="hdr-text">
+      <h2>Part I — Gantt chart & contribution breakdown</h2>
+      <p>Data Science for Business · Summer 2026 · University of Europe for Applied Sciences (UE)</p>
+    </div>
+    <button class="dl-btn" id="dlBtn" onclick="downloadChart()">
+      <i class="ti ti-download" aria-hidden="true"></i> Download PNG
+    </button>
+  </div>
+
+  <div class="week-header">
+    <div class="week-label">Week 1</div>
+    <div class="week-label">Week 2</div>
+    <div class="week-label">Week 3</div>
+    <div class="week-label">Week 4</div>
+    <div class="week-label">Week 5</div>
+  </div>
+
+  <table class="gantt-table" id="ganttTable">
+    <tbody id="gantt-body"></tbody>
+  </table>
+
+  <div class="section-pills" id="pills"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+const members = [
+  { name: "Sandesh H.P.", role: "Section A", section: "Data Preparation", qs: "Q1 · Q2 · Q3 · Q4 · Q5", qShort: "Q1 – Q5", startPct: 0, widthPct: 20, color: "#185FA5" },
+  { name: "Mannala Manogna", role: "Section B", section: "Descriptive Analytics", qs: "Q6 · Q7 · Q8 · Q9 · Q10 · Q11 · Q12", qShort: "Q6 – Q12", startPct: 18, widthPct: 26, color: "#0F6E56" },
+  { name: "Rohan Raj Pampari", role: "Section C", section: "Trend & Visual Analytics", qs: "Q13 · Q14 · Q15 · Q16 · Q17 · Q18", qShort: "Q13 – Q18", startPct: 38, widthPct: 22, color: "#854F0B" },
+  { name: "Tarun Mikkilineni", role: "Section D", section: "Currency Tracker Analytics", qs: "Q19 · Q20 · Q21 · Q22 · Q23 · Q24", qShort: "Q19 – Q24", startPct: 56, widthPct: 22, color: "#993C1D" },
+  { name: "Mridul Rajan", role: "Section E", section: "Simple Comparison", qs: "Q25 · Q26 · Q27 · Q28 · Q29 · Q30", qShort: "Q25 – Q30", startPct: 74, widthPct: 26, color: "#534AB7" },
+  { name: "Advaith Katkojwala", role: "Coordination", section: "Exec. Summary, Intro & Report Assembly", qs: "Full report — all sections", qShort: "Full report", startPct: 0, widthPct: 100, color: "#5F5E5A" },
+];
+
+const tbody = document.getElementById("gantt-body");
+members.forEach(m => {
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td class="member-col">
+      <div class="member-name">${m.name}</div>
+      <div class="member-role">${m.role}: ${m.section}</div>
+    </td>
+    <td class="timeline-col">
+      <div class="timeline-inner">
+        <div class="week-grid">
+          ${[1,2,3,4,5].map(() => `<div class="week-grid-line"></div>`).join("")}
+        </div>
+        <div class="bar" style="left:${m.startPct}%;width:${m.widthPct}%;background:${m.color};">
+          <div>
+            <span class="bar-label">${m.name}</span>
+            <span class="bar-qs">${m.qShort}</span>
+          </div>
+        </div>
+      </div>
+    </td>
+  `;
+  tbody.appendChild(tr);
+});
+
+const pills = document.getElementById("pills");
+members.forEach(m => {
+  const div = document.createElement("div");
+  div.className = "pill";
+  div.style.borderLeftColor = m.color;
+  div.innerHTML = `
+    <div class="pill-section">${m.role}: ${m.section}</div>
+    <div class="pill-member">${m.name}</div>
+    <div class="pill-qs">${m.qs}</div>
+  `;
+  pills.appendChild(div);
+});
+
+function downloadChart() {
+  const btn = document.getElementById("dlBtn");
+  btn.textContent = "Exporting…";
+  btn.disabled = true;
+
+  const target = document.querySelector(".wrap");
+  const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const bg = isDark ? "#1a1a1a" : "#ffffff";
+
+  html2canvas(target, {
+    backgroundColor: bg,
+    scale: 2,
+    useCORS: true,
+    logging: false,
+  }).then(canvas => {
+    const link = document.createElement("a");
+    link.download = "DSB_Part1_Gantt_Chart.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+    btn.innerHTML = '<i class="ti ti-download"></i> Download PNG';
+    btn.disabled = false;
+  }).catch(() => {
+    btn.innerHTML = '<i class="ti ti-download"></i> Download PNG';
+    btn.disabled = false;
+  });
+}
+</script>
